@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<RuntimeIdentifiers>win;linux;osx</RuntimeIdentifiers>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AssemblyName>FlyByWireless.WebTransport</AssemblyName>
+		<VersionSuffix>alpha.1</VersionSuffix>
+		<Authors>WONG Tin Chi Timothy</Authors>
+		<Product>WebTransport over HTTP/3 Server</Product>
+		<Title>$(Product)</Title>
+		<Description>WebTransport over HTTP/3 server using MsQuic.</Description>
+		<PackageTags>webtransport http3 datagram quic msquic</PackageTags>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/wegylexy/webtransport.git</RepositoryUrl>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="../LICENSE" Pack="true" PackagePath="" />
+		<PackageReference Include="FlyByWireless.Quic" Version="1.0.0-alpha.4" />
+		<PackageReference Include="System.IO.Pipelines" Version="6.0.2" />
+	</ItemGroup>
+
+</Project>
