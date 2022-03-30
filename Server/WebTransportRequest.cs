@@ -86,7 +86,7 @@ public sealed class WebTransportRequest : IAsyncDisposable
         }
     }
 
-    public async ValueTask RejectAsync(CancellationToken cancellationToken)
+    public async ValueTask RejectAsync()
     {
         var stream = Interlocked.Exchange(ref _stream, null);
         if (stream == null)
@@ -96,12 +96,7 @@ public sealed class WebTransportRequest : IAsyncDisposable
         await using (stream)
         {
             stream.AbortRead(0x10b); // H3_REQUEST_REJECTED
-            using var cancellation = cancellationToken.Register(() =>
-            {
-                stream.AbortWrite(0x10b); // H3_REQUEST_REJECTED
-            });
-            // Responds status 404
-            await stream.WriteAsync(new byte[] { 1, 3, 0, 0, 0xDB }, true, CancellationToken.None);
+            stream.AbortWrite(0x10b);
         }
     }
 

@@ -6,7 +6,7 @@ using System.Net.Quic;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
-const int MaxClients = 100;
+const int MaxClients = 1000;
 
 using CancellationTokenSource cts = new();
 Console.CancelKeyPress += (s, e) =>
@@ -57,28 +57,46 @@ await RunAsync(listener, MaxClients, cts.Token);
 
 static async Task RunAsync(QuicListener listener, int maxConnections, CancellationToken cancellationToken = default)
 {
-    SemaphoreSlim ss = new(MaxClients);
+    SemaphoreSlim backlogSemaphore = new(Environment.ProcessorCount), connectionSemaphore = new(MaxClients);
     while (!cancellationToken.IsCancellationRequested)
     {
         try
         {
-            await ss.WaitAsync(cancellationToken);
+            await backlogSemaphore.WaitAsync(cancellationToken);
             _ = Task.Run(async () =>
             {
+                var released = false;
                 try
                 {
-                    await using var connection = await listener.AcceptWebTransportConnectionAsync(cancellationToken);
-                    using var cancel = cancellationToken.Register(() => connection.CloseAsync(0x10c).AsTask()); // H3_REQUEST_CANCELLED
-                    await HandleConnectionAsync(connection, cancellationToken);
-                }
-                catch when (cancellationToken.IsCancellationRequested) { }
-                catch (Exception ex)
-                {
-                    Console.Error.WriteLine(ex);
+                    await connectionSemaphore.WaitAsync(cancellationToken);
+                    try
+                    {
+                        await using var connection = await listener.AcceptWebTransportConnectionAsync(cancellationToken);
+                        backlogSemaphore.Release();
+                        released = true;
+                        using var cancel = cancellationToken.Register(() => connection.CloseAsync(0x10c).AsTask()); // H3_REQUEST_CANCELLED
+                        await HandleConnectionAsync(connection, cancellationToken);
+                    }
+                    catch when (cancellationToken.IsCancellationRequested) { }
+                    catch (QuicConnectionAbortedException ex)
+                    {
+                        Console.WriteLine($"Disconnected with code 0x{ex.ErrorCode:X4}.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine(ex);
+                    }
+                    finally
+                    {
+                        connectionSemaphore.Release();
+                    }
                 }
                 finally
                 {
-                    ss.Release();
+                    if (!released)
+                    {
+                        backlogSemaphore.Release();
+                    }
                 }
             }, CancellationToken.None);
         }
@@ -89,7 +107,7 @@ static async Task RunAsync(QuicListener listener, int maxConnections, Cancellati
     }
     for (var i = 0; i < MaxClients; ++i)
     {
-        await ss.WaitAsync(CancellationToken.None);
+        await connectionSemaphore.WaitAsync(CancellationToken.None);
     }
 }
 
