@@ -1,12 +1,13 @@
-﻿using FlyByWireless.WebTransport;
-using Microsoft.Extensions.Configuration;
+﻿using FlyByWireless;
+using FlyByWireless.WebTransport;
 using System.Buffers;
 using System.Net;
 using System.Net.Quic;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
-const int MaxClients = 1000;
+const int MaxClients = 100;
 
 using CancellationTokenSource cts = new();
 Console.CancelKeyPress += (s, e) =>
@@ -16,39 +17,17 @@ Console.CancelKeyPress += (s, e) =>
 };
 
 var runningInDocker = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
-static X509Certificate2 ImportCert()
-{
-    var configuration = new ConfigurationBuilder()
-#if DEBUG
-        .AddUserSecrets<Program>()
-#endif
-        .Build();
-    var cert = X509Certificate2.CreateFromPem(configuration["Cert"], configuration["Key"]);
-    try
-    {
-        if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 20145, 1000))
-        {
-            using (cert)
-            {
-                // Converts PEM to PKCS12 for Schannel
-                return new(cert.Export(X509ContentType.Pkcs12));
-            }
-        }
-        return cert;
-    }
-    catch
-    {
-        using (cert) { }
-        throw;
-    }
-}
-using X509Certificate2 cert = ImportCert();
+using X509Certificate2 cert = CustomCertificate.Generate("Fly by Wireless", "localhost");
+var hash = SHA256.HashData(cert.RawData);
+Console.WriteLine($"Certificate SHA-256 (Base-64): {Convert.ToBase64String(hash)}");
+Console.WriteLine($"TODO: rotate certificate before {cert.NotAfter.ToUniversalTime():u}");
+//JavaScript new WebTransport("https://localhost:4433/test",{serverCertificateHashes:[{algorithm:"sha-256",value:Uint8Array.from(atob("stj9OSzr2ZN+7NNhWgI/GyvnqwEll7Rt8MVyw+X4LzA="),c=>c.charCodeAt(0))}]})
 using QuicListener listener = new(new QuicListenerOptions()
 {
     ListenEndPoint = new(IPAddress.IPv6Any, runningInDocker ? 3297 : 4433),
     ServerAuthenticationOptions = new()
     {
-        ServerCertificate = cert
+        ServerCertificate = cert // TODO: rotate
     },
     IdleTimeout = TimeSpan.FromSeconds(30)
 }.WithWebTransport());
