@@ -1,7 +1,8 @@
-﻿using System.Buffers;
+﻿extern alias Quic;
+using Quic.System.Net.Quic;
+using System.Buffers;
 using System.Collections.Concurrent;
 using System.Net.Http.HPack;
-using System.Net.Quic;
 using System.Text;
 using System.Threading.Channels;
 

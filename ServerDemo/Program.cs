@@ -1,8 +1,9 @@
-﻿using FlyByWireless;
+﻿extern alias Quic;
+using FlyByWireless;
 using FlyByWireless.WebTransport;
+using Quic.System.Net.Quic;
 using System.Buffers;
 using System.Net;
-using System.Net.Quic;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -27,7 +28,11 @@ using QuicListener listener = new(new QuicListenerOptions()
     ListenEndPoint = new(IPAddress.IPv6Any, runningInDocker ? 3297 : 4433),
     ServerAuthenticationOptions = new()
     {
-        ServerCertificate = cert // TODO: rotate
+        ServerCertificateSelectionCallback = (sender, hostName) =>
+        {
+            Console.WriteLine($"Selecting certificate for {hostName}");
+            return cert; // TODO: rotate
+        }
     },
     IdleTimeout = TimeSpan.FromSeconds(30)
 }.WithWebTransport());

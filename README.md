@@ -18,6 +18,4 @@ Reference: https://www.ietf.org/id/draft-ietf-webtrans-http3-02.html
 
 ## Test
 
-According to [Playing with QUIC](https://www.chromium.org/quic/playing-with-quic/), custom certificates (even installed in Local Machine Trusted Root) will not be trusted by Chromium-based browsers. All of `--user-data-dir`, `--origin-to-force-quic-on`, and `--ignore-certificate-errors-spki-list` are required to test with a custom certificate.
-
-Simple client: https://googlechrome.github.io/samples/webtransport/client.html
+Simple client: https://googlechrome.github.io/samples/webtransport/client.html (use F12 Dev Console to set a break point and inject custom cert hash(es))

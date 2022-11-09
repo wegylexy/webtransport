@@ -1,6 +1,7 @@
-﻿using System.Buffers;
+﻿extern alias Quic;
+using Quic.System.Net.Quic;
+using System.Buffers;
 using System.Buffers.Binary;
-using System.Net.Quic;
 using System.Net.Security;
 
 namespace FlyByWireless.WebTransport;

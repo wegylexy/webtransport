@@ -1,7 +1,8 @@
-﻿using System.Buffers;
+﻿extern alias Quic;
+using Quic.System.Net.Quic;
+using System.Buffers;
 using System.Diagnostics;
 using System.Net.Http.QPack;
-using System.Net.Quic;
 
 namespace FlyByWireless.WebTransport;
 

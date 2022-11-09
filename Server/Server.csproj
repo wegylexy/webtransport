@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
 		<RuntimeIdentifiers>win;linux;osx</RuntimeIdentifiers>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<AssemblyName>FlyByWireless.WebTransport</AssemblyName>
-		<VersionSuffix>alpha.1</VersionSuffix>
+		<VersionSuffix>alpha.2</VersionSuffix>
 		<Authors>WONG Tin Chi Timothy</Authors>
 		<Product>WebTransport over HTTP/3 Server</Product>
 		<Title>$(Product)</Title>
@@ -19,8 +19,8 @@
 
 	<ItemGroup>
 		<None Include="../LICENSE" Pack="true" PackagePath="" />
-		<PackageReference Include="FlyByWireless.Quic" Version="1.0.0-alpha.4" />
-		<PackageReference Include="System.IO.Pipelines" Version="6.0.2" />
+		<PackageReference Include="FlyByWireless.Quic" Version="1.0.0-alpha.4" Aliases="Quic" />
+		<PackageReference Include="System.IO.Pipelines" Version="7.0.0" />
 	</ItemGroup>
 
 </Project>
