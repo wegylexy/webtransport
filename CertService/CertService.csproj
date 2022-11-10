@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<AssemblyName>FlyByWireless.WebTransport.CertService</AssemblyName>
+		<Authors>WONG Tin Chi Timothy</Authors>
+		<Product>Cert Service for WebTransport</Product>
+		<Title>$(Product)</Title>
+		<Description>Cert generation and rotation service for WebTransport.</Description>
+		<RepositoryUrl>https://github.com/wegylexy/webtransport.git</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>webtransport cert certificate</PackageTags>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="../LICENSE" Pack="true" PackagePath="" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Options" Version="7.0.0" />
+	</ItemGroup>
+
+</Project>
