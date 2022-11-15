@@ -5,7 +5,7 @@ using System.Security.Cryptography.X509Certificates;
 
 namespace FlyByWireless.WebTransport;
 
-public class CertService
+public class CertService : IDisposable
 {
     protected static readonly X509Extension
         _purpose = new X509EnhancedKeyUsageExtension(new OidCollection
@@ -34,7 +34,17 @@ public class CertService
         _certs = new();
     }
 
-    protected virtual X509Certificate2 GenerateCertificate(out DateTimeOffset expiry)
+    public virtual void Dispose()
+    {
+        foreach (var t in _certs)
+        {
+            t.Cert.Dispose();
+        }
+        _certs.Clear();
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual X509Certificate2 GenerateCertificate()
     {
         // Creates key
         using var ec = ECDsa.Create(ECCurve.NamedCurves.nistP256);
@@ -45,7 +55,7 @@ public class CertService
         req.CertificateExtensions.Add(_subjectAlternateNames);
         // Signs
         var now = UtcNow;
-        using var crt = req.CreateSelfSigned(now, expiry = now.Add(_duration - TimeSpan.FromTicks(1)));
+        using var crt = req.CreateSelfSigned(now, now.Add(_duration));
         // Exports
         return new(crt.Export(X509ContentType.Pfx));
     }
@@ -59,7 +69,8 @@ public class CertService
             {
                 while (_certs.TryPeek(out first) && first.Expiry < old)
                 {
-                    _ = _certs.TryDequeue(out _);
+                    _ = _certs.TryDequeue(out var t);
+                    t.Cert.Dispose();
                 }
             }
         }
@@ -70,8 +81,8 @@ public class CertService
             {
                 if (_certs.LastOrDefault().Expiry <= old)
                 {
-                    var cert = GenerateCertificate(out var expiry);
-                    _certs.Enqueue((cert, SHA256.HashData(cert.RawData), expiry.UtcDateTime));
+                    var cert = GenerateCertificate();
+                    _certs.Enqueue((cert, SHA256.HashData(cert.RawData), cert.NotAfter.ToUniversalTime()));
                 }
             }
         }

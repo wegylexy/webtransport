@@ -20,6 +20,7 @@
 	<ItemGroup>
 		<None Include="../LICENSE" Pack="true" PackagePath="" />
 		<PackageReference Include="FlyByWireless.Quic" Version="1.0.0-alpha.4" Aliases="Quic" />
+		<PackageReference Include="FlyByWireless.WebTransport.CertService" Version="1.0.0" />
 		<PackageReference Include="System.IO.Pipelines" Version="7.0.0" />
 	</ItemGroup>
 

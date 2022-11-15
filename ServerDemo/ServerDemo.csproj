@@ -12,6 +12,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="FlyByWireless.Quic" Version="1.0.0-alpha.4" Aliases="Quic"/>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
 		<ProjectReference Include="..\Server\Server.csproj" />
 	</ItemGroup>
 

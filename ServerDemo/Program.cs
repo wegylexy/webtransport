@@ -1,11 +1,9 @@
 ﻿extern alias Quic;
-using FlyByWireless;
 using FlyByWireless.WebTransport;
+using Microsoft.Extensions.DependencyInjection;
 using Quic.System.Net.Quic;
 using System.Buffers;
 using System.Net;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 const int MaxClients = 100;
@@ -18,11 +16,12 @@ Console.CancelKeyPress += (s, e) =>
 };
 
 var runningInDocker = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true";
-using X509Certificate2 cert = CustomCertificate.Generate("Fly by Wireless", "localhost");
-var hash = SHA256.HashData(cert.RawData);
-Console.WriteLine($"Certificate SHA-256 (Base-64): {Convert.ToBase64String(hash)}");
-Console.WriteLine($"TODO: rotate certificate before {cert.NotAfter.ToUniversalTime():u}");
-//JavaScript new WebTransport("https://localhost:4433/test",{serverCertificateHashes:[{algorithm:"sha-256",value:Uint8Array.from(atob("stj9OSzr2ZN+7NNhWgI/GyvnqwEll7Rt8MVyw+X4LzA="),c=>c.charCodeAt(0))}]})
+
+ServiceCollection services = new();
+services.AddWebTransportCertService("Fly by Wireless", "localhost");
+var provider = services.BuildServiceProvider();
+var certService = provider.GetRequiredService<CertService>();
+
 using QuicListener listener = new(new QuicListenerOptions()
 {
     ListenEndPoint = new(IPAddress.IPv6Any, runningInDocker ? 3297 : 4433),
@@ -31,7 +30,14 @@ using QuicListener listener = new(new QuicListenerOptions()
         ServerCertificateSelectionCallback = (sender, hostName) =>
         {
             Console.WriteLine($"Selecting certificate for {hostName}");
-            return cert; // TODO: rotate
+
+            var cert = certService.GetCertificate(out var hash);
+            var s = Convert.ToBase64String(hash.Span);
+            Console.WriteLine($"Certificate SHA-256 (Base-64): {s}");
+            // TODO: certService.EnumerateHashes().Select(h => Convert.ToBase64String(h.Span));
+            Console.WriteLine(@$"/*JavaScript*/ new WebTransport(""https://localhost:4433/test"",{{serverCertificateHashes:[{{algorithm:""sha-256"",value:Uint8Array.from(atob(""{s}""),c=>c.charCodeAt(0))}}]}})");
+
+            return cert;
         }
     },
     IdleTimeout = TimeSpan.FromSeconds(30)

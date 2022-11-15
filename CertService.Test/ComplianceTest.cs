@@ -27,7 +27,7 @@ public sealed class ComplianceTest
     public void Renewal()
     {
         var now = DateTimeOffset.UtcNow;
-        var service = CreateTestSubject();
+        using var service = CreateTestSubject();
 
         // in the beginning
         service.SetUtcNow(now);
@@ -38,7 +38,7 @@ public sealed class ComplianceTest
             .Which.Should().Be(hash1, "no rotation");
 
         // just after 1/3 duration
-        service.SetUtcNow(now + _duration / 3 + TimeSpan.FromTicks(1));
+        service.SetUtcNow(now + _duration / 3 + TimeSpan.FromSeconds(1));
         var before2 = service.EnumerateHashes().ToList();
         before2.Should().HaveCount(2, "first rotation").And
             .Contain(hash1, "existing still valid");
@@ -49,7 +49,7 @@ public sealed class ComplianceTest
             .Which.Should().Be(hash1, "same hash");
 
         // just before 2/3 duration
-        service.SetUtcNow(now + _duration * 2 / 3 - TimeSpan.FromTicks(1));
+        service.SetUtcNow(now + _duration * 2 / 3 - TimeSpan.FromSeconds(1));
         var before3 = service.EnumerateHashes().ToList();
         before3.Should().BeEquivalentTo(before2, "still first rotation");
         var third = service.GetCertificate(out var hash3);
@@ -57,8 +57,8 @@ public sealed class ComplianceTest
         service.EnumerateHashes().Should().BeEquivalentTo(before2, "no change");
         hash3.Should().Be(hash2, "same hash");
 
-        // at 2/3 duration
-        service.SetUtcNow(now + _duration * 2 / 3);
+        // just after 2/3 duration
+        service.SetUtcNow(now + _duration * 2 / 3 + TimeSpan.FromSeconds(1));
         var before4 = service.EnumerateHashes().ToList();
         before4.Should().HaveCount(3, "second rotations");
         var forth = service.GetCertificate(out var hash4);
@@ -68,8 +68,8 @@ public sealed class ComplianceTest
             .And.ContainSingle(hash => hash.Equals(hash4), "current")
             .Which.Should().NotBe(hash3, "different hash");
 
-        // at duration
-        service.SetUtcNow(now + _duration);
+        // just after duration
+        service.SetUtcNow(now + _duration + TimeSpan.FromSeconds(1));
         var before5 = service.EnumerateHashes().ToList();
         before5.Should().HaveCount(3, "expired")
             .And.NotBeEquivalentTo(before4, "cert rotated")
